@@ -1,4 +1,5 @@
 import AppError from '@shared/errors/AppError';
+
 import FakeUsersRepository from '../repositories/fakes/FakeUsersRepository';
 import FakeHashProvider from '../providers/HashProvider/fakes/FakeHashProvider';
 import AuthenticateUserService from './AuthenticateUserService';
@@ -13,6 +14,7 @@ describe('AuthenticateUser', () => {
       fakeUsersRepository,
       fakeHashProvider,
     );
+
     const authenticateUser = new AuthenticateUserService(
       fakeUsersRepository,
       fakeHashProvider,
@@ -20,16 +22,16 @@ describe('AuthenticateUser', () => {
 
     const user = await createUser.execute({
       name: 'John Doe',
-      email: 'johndoe2@example.com',
+      email: 'johndoe@example.com',
       password: '123456',
     });
 
     const response = await authenticateUser.execute({
-      email: 'johndoe2@example.com',
+      email: 'johndoe@example.com',
       password: '123456',
     });
 
-    expect(response).toHaveProperty('token');
+    expect(response).resolves.toHaveProperty('token');
     expect(response.user).toEqual(user);
   });
 
@@ -41,38 +43,33 @@ describe('AuthenticateUser', () => {
       fakeUsersRepository,
       fakeHashProvider,
     );
-
-    expect(
+    await expect(
       authenticateUser.execute({
-        email: 'johndoe2@example.com',
+        email: 'johndoe@example.com',
         password: '123456',
       }),
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it('should not be able to authenticate with wrong password', async () => {
+  it('should not be able to autheclearnticate with wrong password', async () => {
     const fakeUsersRepository = new FakeUsersRepository();
     const fakeHashProvider = new FakeHashProvider();
 
-    const createUser = new CreateUserService(
-      fakeUsersRepository,
-      fakeHashProvider,
-    );
     const authenticateUser = new AuthenticateUserService(
       fakeUsersRepository,
       fakeHashProvider,
     );
 
-    await createUser.execute({
+    await fakeUsersRepository.create({
       name: 'John Doe',
-      email: 'johndoe2@example.com',
+      email: 'johndoe@example.com',
       password: '123456',
     });
 
-    expect(
+    await expect(
       authenticateUser.execute({
-        email: 'johndoe2@example.com',
-        password: '789321',
+        email: 'johndoe@example.com',
+        password: 'wrong-password',
       }),
     ).rejects.toBeInstanceOf(AppError);
   });
